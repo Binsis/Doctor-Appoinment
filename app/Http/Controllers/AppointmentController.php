@@ -46,6 +46,29 @@ class AppointmentController extends Controller
             'patient_email' => 'required|email',
         ]);
 
+        // to check the user is already booked an appoinment with other doctor
+        $newStart = Carbon::parse("{$request->appointment_date} {$request->start_time}");
+        $newEnd = Carbon::parse("{$request->appointment_date} {$request->end_time}");
+
+        $checkTime = Appointment::where('appointment_date', $request->appointment_date)
+        ->where('patient_email', $request->patient_email)
+        ->get()
+        ->first(function ($appointment) use ($newStart, $newEnd) {
+            $existingStart = Carbon::parse("{$appointment->appointment_date} {$appointment->start_time}");
+            $existingEnd = Carbon::parse("{$appointment->appointment_date} {$appointment->end_time}");
+            return $newStart < $existingEnd && $newEnd > $existingStart;
+        });
+
+    if ($checkTime) {
+        $doctor = Doctor::find($checkTime->doctor_id);
+        $dayName = Carbon::parse($checkTime->appointment_date)->format('l');
+        $start = Carbon::parse($checkTime->start_time)->format('h:i A');
+        $end = Carbon::parse($checkTime->end_time)->format('h:i A');
+
+        return back()->with('error', "You already booked an appointment with {$doctor->name} on {$dayName} from {$start} to {$end}.");
+    }
+
+        // to check the slot already booked
         $exists = Appointment::where('doctor_id', $request->doctor_id)
             ->where('appointment_date', $request->appointment_date)
             ->where('start_time', $request->start_time)
@@ -54,7 +77,6 @@ class AppointmentController extends Controller
         if ($exists) {
             return back()->with('error', 'Slot already booked!');
         }
-
         Appointment::create($request->all());
 
         return back()->with('success', 'Appointment booked successfully!');

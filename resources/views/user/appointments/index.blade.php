@@ -1,6 +1,13 @@
 @extends('user.layouts.app')
 
 @section('content')
+<div class="d-flex justify-content-end m-3">
+    <form method="POST" action="{{ route('logout') }}">
+        @csrf
+        <button type="submit" class="btn btn-outline-danger">Logout</button>
+    </form>
+</div>
+
 <div class="container mt-4">
     <h2 class="mb-4">Book an Appointment</h2>
 
@@ -44,12 +51,12 @@
 
         <div class="mb-3">
             <label for="patient_name" class="form-label">Your Name</label>
-            <input type="text" name="patient_name" id="patient_name" class="form-control" required>
+            <input type="text" name="patient_name" id="patient_name" class="form-control" value='{{ auth()->user()->name ?? '' }}' readonly>
         </div>
 
         <div class="mb-3">
             <label for="patient_email" class="form-label">Your Email</label>
-            <input type="email" name="patient_email" id="patient_email" class="form-control" required>
+            <input type="email" name="patient_email" id="patient_email" class="form-control" value="{{ auth()->user()->email ?? '' }}" readonly >
         </div>
 
         <button type="submit" class="btn btn-primary">Book Appointment</button>
